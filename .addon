@@ -1,0 +1,39 @@
+{
+  "Title": "Redial",
+  "Type": "addon",
+  "Org": "cutie",
+  "Ident": "redial",
+  "Tags": null,
+  "Schema": 1,
+  "HasAssets": false,
+  "AssetsPath": "",
+  "Resources": null,
+  "MenuResources": null,
+  "HasCode": true,
+  "CodePath": "/code/",
+  "PackageReferences": [
+    "facepunch.sandbox",
+    "thieves.terrortown"
+  ],
+  "EditorReferences": null,
+  "Metadata": {
+    "CsProjName": "",
+    "PrimaryAsset": "Redial.RedialPlacer",
+    "PhysicsMins": "-1,-1,-1",
+    "PhysicsMaxs": "1,1,1",
+    "RenderMins": "-1,-1,-1",
+    "RenderMaxs": "-1,-1,-1",
+    "Compiler": {
+      "RootNamespace": "Redial",
+      "DefineConstants": "SANDBOX;ADDON;DEBUG",
+      "NoWarn": "1701;1702;1591;",
+      "References": [],
+      "DistinctReferences": []
+    },
+    "ParentPackage": "facepunch.sandbox",
+    "Summary": "Set up weapon spawns for TTT",
+    "Description": "# Very WIP. Caveat emptor!\n\nRedial will help you set up weapon spawns for Three Thieves TTT (https://asset.party/thieves/terrortown) maps.\n\nFirst, you\u0027ll want to boot up the Sandbox game mode on the map you want to arm with this addon enabled. Then, you can select Redial from the Toolgun menu and start placing weapons.\n\n- Primary attack (left-click): place a weapon\n- Secondary attack (right-click): change the weapon you are placing\n- Reload (R): save the placements to a file\n\nFeel free to manipulate the weapons you spawned with the Sandbox manipulation tools however you want - the final positions of your weapons are what is saved.\n\nPlace the .redial files that are generated in data/thieves/terrortown and they will be loaded when the server changes to the requested map.",
+    "Public": true,
+    "ReplaceTags": "ttt"
+  }
+}
