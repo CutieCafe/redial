@@ -1,35 +1,147 @@
 ﻿@using Sandbox;
 @using Sandbox.UI;
 @using System;
+@using System.Linq;
 
 @namespace Redial
 
 <style>
-    .indicator {
-        position: absolute;
-        top: 100px;
-        right: 100px;
-
-        background-color: rgba( #111, 0.5 );
-
+    RedialPanel {
+        width: 100%;
+        height: 100%;
         font-family: 'Poppins';
-        font-size: 30px;
-        
-        padding: 20px;
+        font-weight: 800;
+    }
 
-        font-weight: bold;
+    .inner {
+        backdrop-filter: blur(35px);
+        width: 1280px;
+        height: 720px;
+        pointer-events: all;
+        margin: auto;
+        overflow: scroll;
+        border-radius: 16px;
+        padding: 16px;
+    }
+
+    .listing {
+        flex-direction: column;
+        gap: 3px;
+        overflow: scroll;
+        backdrop-filter: blur(45px);
+        margin: 8px;
+        width: 300px;
+        background-color: rgba(0, 0, 0, 0.25);
+    }
+
+    .item {
+        padding: 8px;
+        min-height: 40px;
+        padding-bottom: 8px;
+        font-size: 16px;
+    }
+
+    .item:hover {
+        background-color: rgba(0, 0, 0, 0.25);
+    }
+
+    .right {
+        width: 100%;
+        flex-direction: column;
+        justify-items: center;
+        align-items: center;
+    }
+
+    .logo {
+        font-size: 100px;
+    }
+
+    .tagline {
+        font-size: 40px;
+        padding-bottom: 40px;
+    }
+
+    .instructions {
+        font-size: 30px;
+    }
+
+
+    .button {
+        font-size: 30px;
+        color: white;
+        background-color: rgba(0, 0, 0, 0.25);
+        padding: 10px;
+        border-radius: 10px;
+    }
+
+    .button:hover {
+        background-color: rgba(0, 0, 0, 0.5);
     }
 </style>
 
-<root class="indicator">
-    @RedialPlacer.Current.CurrentWeapon
+<root>
+    @if (Visible)
+    {
+        <div class="inner">
+            <div class="listing">
+                @{
+                    var weapons = RedialPlacer.GetQualifyingWeapons().ToArray();
+                }
+
+                @foreach(var weapon in weapons)
+                {
+                    <div class="item" onclick=@(() => ConsoleSystem.Run("cutie_redial_weapon", weapon.Name))>@weapon.Name</div>
+                }
+            </div>
+
+            <div class="right">
+                <div class="logo">
+                    Redial
+                </div>
+                <div class="tagline">
+                    By Cutie Caf&eacute;
+                </div>
+
+                <div class="instructions">
+                    Instructions:
+                </div>
+
+                <div class="instructions">
+                    @($"1. Select weapon - {(string.IsNullOrEmpty(RedialPlacer.Current.CurrentWeapon) ? "no weapon selected" : $"current weapon: {RedialPlacer.Current.CurrentWeapon}")}")
+                </div>
+                <div class="instructions">
+                    @($"2. Press {Input.GetButtonOrigin("Reload").ToUpperInvariant()} to close this panel, then {Input.GetButtonOrigin("Attack1").ToUpperInvariant()} to place.")
+                </div>
+                <div class="instructions">
+                    @($"3. Press {Input.GetButtonOrigin("Reload").ToUpperInvariant()} to open this panel, then \"Save\" below to save.")
+                </div>
+                <div class="instructions">
+                    4. Copy the file to data/thieves/terrortown on your server.
+                </div>
+
+                <button class="button" onclick=@(() => ConsoleSystem.Run("cutie_redial_save"))>
+                    Save
+                </button>
+            </div>
+        </div>
+    }
 </root>
 
 @code{
     TimeSince built = 0;
+    bool Visible = false;
+
+    public override void Tick()
+    {
+        if( Input.Pressed("Reload"))
+        {
+            Visible = !Visible;
+            Input.ReleaseAction("Reload");
+        }
+    }
 
     protected override int BuildHash()
     {
-        return HashCode.Combine(RedialPlacer.Current.CurrentWeapon, built);
+        return HashCode.Combine(RedialPlacer.Current.CurrentWeapon, built, Visible);
     }
 }

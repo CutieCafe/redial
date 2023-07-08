@@ -10,7 +10,7 @@ using TerrorTown;
 
 namespace Redial
 {
-    [Library("tool_redial_placer", Title = "Redial", Description = "Primary attack to place, secondary attack to switch weapon, reload to save", Group = "fun")]
+    [Library("tool_redial_placer", Title = "Redial", Description = "Place TTT weapons - Press Reload for settings", Group = "fun")]
     public partial class RedialPlacer : BaseTool
     {
         internal static RedialPlacer Current;
@@ -45,11 +45,6 @@ namespace Redial
         {
             Current = this;
 
-            if (Game.IsServer)
-            {
-                CurrentWeapon = GetQualifyingWeapons().ElementAt(CurrentWeaponIndex).Name;
-            }
-
             if (Game.IsClient)
             {
                 panel = HUD.AddChild<RedialPanel>();
@@ -69,7 +64,7 @@ namespace Redial
             }
         }
 
-        private static IEnumerable<TypeDescription> GetQualifyingWeapons()
+        public static IEnumerable<TypeDescription> GetQualifyingWeapons()
         {
             return TypeLibrary.GetTypes<TerrorTown.Weapon>().Where(i => !blacklisted.Contains(i.Name))
                     .Concat(TypeLibrary.GetTypes<BaseAmmoItem>().Where(i => !blacklisted.Contains(i.Name)))
@@ -78,7 +73,7 @@ namespace Redial
 
         }
 
-        private string SerializeEntity(Entity ent)
+        private static string SerializeEntity(Entity ent)
         {
             var name = ent.GetType().Name;
 
@@ -99,12 +94,7 @@ namespace Redial
 
             if (Game.IsServer)
             {
-                if(CurrentWeapon == "")
-                {
-                    CurrentWeapon = GetQualifyingWeapons().ElementAt(CurrentWeaponIndex).Name;
-                }
-
-                if(Input.Pressed("attack1"))
+                if(Input.Pressed("attack1") && CurrentWeapon != "")
                 {
                     var tr = Trace.Ray(Owner.EyePosition, Owner.EyePosition + Owner.EyeRotation.Forward * 2000).UseHitboxes().WithAnyTags("solid", "debris").Ignore(Owner).Radius(2.0f).Run();
 
@@ -148,34 +138,31 @@ namespace Redial
 
                     item.Spawn();
                 }
-
-                if (Input.Pressed("attack2"))
-                {
-                    CurrentWeaponIndex++;
-                    if (CurrentWeaponIndex >= GetQualifyingWeapons().Count()) CurrentWeaponIndex = 0;
-                    CurrentWeapon = GetQualifyingWeapons().ElementAt(CurrentWeaponIndex).Name;
-                }
-
-                if( Input.Pressed("reload"))
-                {
-                    SavedTo = FileSystem.Data.GetFullPath("redial/" + Game.Server.MapIdent + ".redial");
-
-                    var ents = Entity.All.Where(i => i != null && i.Tags.Has("redial"));
-
-                    FileSystem.Data.CreateDirectory("redial");
-                    FileSystem.Data.WriteAllText("redial/" + Game.Server.MapIdent + ".redial", string.Join('\n', ents.Select(SerializeEntity)));
-                    Saved = 0;
-                }
             }
+        }
 
-            if( SavedTo != "" )
+        [ConCmd.Server("cutie_redial_weapon")]
+        public static void SetWeapon(string weapon)
+        {
+            var myTools = Entity.All.Where(i => i is Tool tool && tool.Owner == ConsoleSystem.Caller?.Pawn && tool.CurrentTool is RedialPlacer);
+
+            if( myTools.Any()) {
+                ((myTools.First() as Tool).CurrentTool as RedialPlacer).CurrentWeapon = weapon;
+            } else
             {
-                DebugOverlay.ScreenText("Saved weapon remap to " + FileSystem.Data.GetFullPath("redial/" + Game.Server.MapIdent + ".redial"), new Vector2(20, 20));
-
-                if(Saved > 10) {
-                    SavedTo = "";
-                }
+                Log.Error("No tool?!");
             }
+        }
+
+        [ConCmd.Server("cutie_redial_save")]
+        public static void Save()
+        {
+            var ents = Entity.All.Where(i => i != null && i.Tags.Has("redial"));
+
+            FileSystem.Data.CreateDirectory("redial");
+            FileSystem.Data.WriteAllText("redial/" + Game.Server.MapIdent + ".redial", string.Join('\n', ents.Select(i => SerializeEntity(i))));
+
+            Sandbox.Chat.AddChatEntry("Server", $"Saved Redial script to {FileSystem.Data.GetFullPath("redial/" + Game.Server.MapIdent + ".redial")}");
         }
     }
 }
